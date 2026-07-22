@@ -22,7 +22,7 @@ git push -u origin main
 
 ## Before publishing to npm
 
-Choose an available package name. The scoped package `@zooplio/ugc-guard` requires access to the `zooplio` npm organization. Otherwise, use a name such as `zooplio-ugc-guard` and update the imports in the README.
+Choose an available package name. The scoped package `@getris/ugc-guard` requires access to the `zooplio` npm organization. Otherwise, use a name such as `zooplio-ugc-guard` and update the imports in the README.
 
 Then run:
 

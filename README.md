@@ -1,6 +1,6 @@
 # Zooplio UGC Guard
 
-[![CI](https://github.com/zooplio/ugc-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/zooplio/ugc-guard/actions/workflows/ci.yml)
+[![CI](https://github.com/Getris/ugc-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/Getris/ugc-guard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A lightweight, dependency-free runtime toolkit for inspecting user-generated content in TypeScript and Node.js applications.
@@ -22,13 +22,13 @@ A lightweight, dependency-free runtime toolkit for inspecting user-generated con
 ## Install
 
 ```bash
-npm install @zooplio/ugc-guard
+npm install @getris/ugc-guard
 ```
 
 Until the package is published to npm, install directly from GitHub:
 
 ```bash
-npm install github:zooplio/ugc-guard
+npm install github:Getris/ugc-guard
 ```
 
 ## Basic usage
@@ -43,7 +43,7 @@ import {
   PhraseRule,
   SpamRule,
   UnicodeRule
-} from "@zooplio/ugc-guard";
+} from "@getris/ugc-guard";
 
 const guard = createGuard({
   maxRiskScore: 60,
@@ -99,8 +99,8 @@ The adapter uses structural types, so Express is not required as a package depen
 
 ```ts
 import express from "express";
-import { createGuard, HtmlRule, SpamRule } from "@zooplio/ugc-guard";
-import { createExpressMiddleware } from "@zooplio/ugc-guard/express";
+import { createGuard, HtmlRule, SpamRule } from "@getris/ugc-guard";
+import { createExpressMiddleware } from "@getris/ugc-guard/express";
 
 const app = express();
 const guard = createGuard({ rules: [new HtmlRule(), new SpamRule()] });
@@ -114,7 +114,7 @@ app.post("/comments", createExpressMiddleware(guard, { field: "text" }), (req, r
 ## Custom rules
 
 ```ts
-import type { GuardRule } from "@zooplio/ugc-guard";
+import type { GuardRule } from "@getris/ugc-guard";
 
 const noEmptyContent: GuardRule = {
   name: "no-empty-content",

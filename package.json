@@ -1,5 +1,5 @@
 {
-  "name": "@zooplio/ugc-guard",
+  "name": "@getris/ugc-guard",
   "version": "0.1.0",
   "description": "A lightweight, configurable TypeScript toolkit for inspecting user-generated content.",
   "type": "module",
@@ -42,20 +42,20 @@
     "content-filter",
     "typescript"
   ],
-  "author": "Zooplio contributors",
+  "author": "Getris contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zooplio/ugc-guard.git"
+    "url": "git+https://github.com/Getris/ugc-guard.git"
   },
   "bugs": {
-    "url": "https://github.com/zooplio/ugc-guard/issues"
+    "url": "https://github.com/Getris/ugc-guard/issues"
   },
-  "homepage": "https://github.com/zooplio/ugc-guard#readme",
+  "homepage": "https://github.com/Getris/ugc-guard#readme",
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "typescript": "~5.9.3"
   }
 }

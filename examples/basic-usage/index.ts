@@ -7,7 +7,7 @@ import {
   PhraseRule,
   SpamRule,
   UnicodeRule
-} from "@zooplio/ugc-guard";
+} from "@getris/ugc-guard";
 
 const guard = createGuard({
   maxRiskScore: 60,
