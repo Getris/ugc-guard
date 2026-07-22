@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   createGuard,
   DuplicateRule,
+  extractUrlCandidates,
   HtmlRule,
   LengthRule,
   LinkRule,
@@ -59,6 +60,16 @@ test("LinkRule respects subdomain allowlists", async () => {
 test("LinkRule reports excessive links", async () => {
   const result = await inspect(new LinkRule({ maxLinks: 1 }), "https://a.example https://b.example");
   assert.equal(result.findings.some((finding) => finding.code === "TOO_MANY_LINKS"), true);
+});
+
+test("extractUrlCandidates handles adversarial punctuation in linear time", () => {
+  const hostile = `https://example.com/${"!".repeat(100_000)}`;
+  assert.deepEqual(extractUrlCandidates(hostile), ["https://example.com/"]);
+});
+
+test("extractUrlCandidates finds explicit and bare URLs without matching email addresses", () => {
+  const values = extractUrlCandidates("See (https://example.com/path), www.example.org! and docs.example.net/start; not user@example.com");
+  assert.deepEqual(values, ["https://example.com/path", "www.example.org", "docs.example.net/start"]);
 });
 
 test("PhraseRule hides matched phrase by default", async () => {

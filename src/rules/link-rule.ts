@@ -68,14 +68,14 @@ export class LinkRule implements GuardRule {
     }
 
     for (const raw of candidates.slice(0, this.#maxUrlsToInspect)) {
-      if (/^(?:javascript|vbscript|data|file):/iu.test(raw)) {
+      if (hasDangerousScheme(raw)) {
         findings.push(makeFinding("DANGEROUS_URL_SCHEME", "A dangerous or unsupported URL scheme was detected.", 90, { scheme: raw.split(":", 1)[0]?.toLowerCase() }));
         continue;
       }
 
-      const value = /^[a-z][a-z0-9+.-]*:\/\//iu.test(raw)
+      const value = hasHierarchicalScheme(raw)
         ? raw
-        : `https://${raw.replace(/^www\./iu, "")}`;
+        : `https://${removeWwwPrefix(raw)}`;
 
       try {
         const url = new URL(value);
@@ -129,12 +129,176 @@ export class LinkRule implements GuardRule {
   }
 }
 
-export function extractUrlCandidates(text: string): string[] {
-  const matches = text.match(
-    /(?:javascript|vbscript|data|file):[^\s<>"'`]+|(?:[a-z][a-z0-9+.-]*:\/\/|www\.)[^\s<>"'`]+|\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}(?::\d{1,5})?(?:\/[^\s<>"'`]*)?/giu
-  ) ?? [];
+const MAX_URL_CANDIDATE_LENGTH = 2_048;
+const DANGEROUS_SCHEMES = ["javascript:", "vbscript:", "data:", "file:"] as const;
 
-  return matches.map((value) => value.replace(/[),.;!?\]}]+$/u, ""));
+export function extractUrlCandidates(text: string): string[] {
+  const candidates: string[] = [];
+  let tokenStart = -1;
+
+  for (let index = 0; index <= text.length; index += 1) {
+    const character = index < text.length ? text[index] : undefined;
+
+    if (character !== undefined && !isUrlTokenDelimiter(character)) {
+      if (tokenStart < 0) tokenStart = index;
+      continue;
+    }
+
+    if (tokenStart < 0) continue;
+
+    const rawToken = text.slice(tokenStart, Math.min(index, tokenStart + MAX_URL_CANDIDATE_LENGTH));
+    tokenStart = -1;
+
+    const candidate = trimUrlPunctuation(rawToken);
+    if (candidate.length > 0 && isUrlLikeCandidate(candidate)) {
+      candidates.push(candidate);
+    }
+  }
+
+  return candidates;
+}
+
+function isUrlTokenDelimiter(character: string): boolean {
+  return character === "<"
+    || character === ">"
+    || character === '"'
+    || character === "'"
+    || character === "`"
+    || character.trim().length === 0;
+}
+
+function trimUrlPunctuation(value: string): string {
+  let start = 0;
+  let end = value.length;
+
+  while (start < end && isLeadingUrlPunctuation(value[start] ?? "")) start += 1;
+  while (end > start && isTrailingUrlPunctuation(value[end - 1] ?? "")) end -= 1;
+
+  return value.slice(start, end);
+}
+
+function isLeadingUrlPunctuation(character: string): boolean {
+  return character === "(" || character === "[" || character === "{";
+}
+
+function isTrailingUrlPunctuation(character: string): boolean {
+  return character === ")"
+    || character === "]"
+    || character === "}"
+    || character === ","
+    || character === "."
+    || character === ";"
+    || character === "!"
+    || character === "?";
+}
+
+function isUrlLikeCandidate(value: string): boolean {
+  if (hasDangerousScheme(value) || hasHierarchicalScheme(value) || startsWithIgnoreCase(value, "www.")) {
+    return true;
+  }
+
+  return isBareDomainCandidate(value);
+}
+
+function hasDangerousScheme(value: string): boolean {
+  return DANGEROUS_SCHEMES.some((scheme) => startsWithIgnoreCase(value, scheme));
+}
+
+function hasHierarchicalScheme(value: string): boolean {
+  const separatorIndex = value.indexOf("://");
+  if (separatorIndex < 1 || !isAsciiLetter(value.charCodeAt(0))) return false;
+
+  for (let index = 1; index < separatorIndex; index += 1) {
+    const code = value.charCodeAt(index);
+    if (!isAsciiLetter(code) && !isAsciiDigit(code) && code !== 43 && code !== 45 && code !== 46) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isBareDomainCandidate(value: string): boolean {
+  if (value.includes("@")) return false;
+
+  const authorityEnd = findFirstIndex(value, "/?#");
+  const authority = authorityEnd < 0 ? value : value.slice(0, authorityEnd);
+  if (authority.length === 0) return false;
+
+  const portSeparator = authority.lastIndexOf(":");
+  const host = portSeparator >= 0 ? authority.slice(0, portSeparator) : authority;
+  const port = portSeparator >= 0 ? authority.slice(portSeparator + 1) : "";
+
+  if (portSeparator >= 0 && !isValidPort(port)) return false;
+  if (!host.includes(".") || host.length > 253) return false;
+
+  const labels = host.split(".");
+  if (labels.length < 2 || labels.some((label) => !isValidHostLabel(label))) return false;
+
+  const topLevelDomain = labels.at(-1) ?? "";
+  return isValidTopLevelDomain(topLevelDomain);
+}
+
+function isValidTopLevelDomain(value: string): boolean {
+  if (value.length < 2 || value.length > 63) return false;
+  return everyAsciiLetter(value)
+    || (startsWithIgnoreCase(value, "xn--") && isValidHostLabel(value));
+}
+
+function isValidHostLabel(label: string): boolean {
+  if (label.length < 1 || label.length > 63) return false;
+  if (!isAsciiAlphaNumeric(label.charCodeAt(0)) || !isAsciiAlphaNumeric(label.charCodeAt(label.length - 1))) return false;
+
+  for (let index = 1; index < label.length - 1; index += 1) {
+    const code = label.charCodeAt(index);
+    if (!isAsciiAlphaNumeric(code) && code !== 45) return false;
+  }
+
+  return true;
+}
+
+function isValidPort(port: string): boolean {
+  if (port.length < 1 || port.length > 5) return false;
+  for (let index = 0; index < port.length; index += 1) {
+    if (!isAsciiDigit(port.charCodeAt(index))) return false;
+  }
+  const numericPort = Number(port);
+  return numericPort >= 1 && numericPort <= 65_535;
+}
+
+function everyAsciiLetter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    if (!isAsciiLetter(value.charCodeAt(index))) return false;
+  }
+  return true;
+}
+
+function isAsciiAlphaNumeric(code: number): boolean {
+  return isAsciiLetter(code) || isAsciiDigit(code);
+}
+
+function isAsciiLetter(code: number): boolean {
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+}
+
+function isAsciiDigit(code: number): boolean {
+  return code >= 48 && code <= 57;
+}
+
+function startsWithIgnoreCase(value: string, prefix: string): boolean {
+  if (value.length < prefix.length) return false;
+  return value.slice(0, prefix.length).toLowerCase() === prefix;
+}
+
+function removeWwwPrefix(value: string): string {
+  return startsWithIgnoreCase(value, "www.") ? value.slice(4) : value;
+}
+
+function findFirstIndex(value: string, characters: string): number {
+  for (let index = 0; index < value.length; index += 1) {
+    if (characters.includes(value[index] ?? "")) return index;
+  }
+  return -1;
 }
 
 function normalizeHost(host: string): string {
