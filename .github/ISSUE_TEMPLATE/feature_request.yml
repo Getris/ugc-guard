@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a focused rule, adapter, or core improvement
+title: "[Feature]: "
+labels: [enhancement, needs-triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or maintainer problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This can be implemented without adding a runtime dependency, or the dependency tradeoff is explained.
+        - label: The proposal does not claim heuristic detection is a complete security control.

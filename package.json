@@ -1,10 +1,11 @@
 {
   "name": "@getris/ugc-guard",
-  "version": "0.1.0",
-  "description": "A lightweight, configurable TypeScript toolkit for inspecting user-generated content.",
+  "version": "0.2.0",
+  "description": "Composable, dependency-free TypeScript guards for user-generated content, links, spam, Unicode abuse, and accidental secrets.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -17,32 +18,44 @@
     "./fastify": {
       "types": "./dist/adapters/fastify.d.ts",
       "import": "./dist/adapters/fastify.js"
-    }
+    },
+    "./community": {
+      "types": "./dist/presets/community.d.ts",
+      "import": "./dist/presets/community.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
     "README.md",
     "LICENSE",
-    "SECURITY.md"
+    "SECURITY.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\"",
     "build": "npm run clean && tsc -p tsconfig.json",
-    "test": "npm run build && node --test tests/*.test.mjs",
-    "check": "npm run test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:unit": "node --test tests/*.test.mjs",
+    "test": "npm run build && npm run test:unit",
+    "test:coverage": "npm run build && node --experimental-test-coverage --test tests/*.test.mjs",
+    "check": "npm run typecheck && npm test",
     "prepack": "npm run check",
     "prepare": "npm run build"
   },
   "keywords": [
     "ugc",
     "moderation",
+    "content-safety",
     "security",
     "spam",
     "unicode",
-    "content-filter",
-    "typescript"
+    "url-validation",
+    "secret-detection",
+    "typescript",
+    "nodejs"
   ],
-  "author": "Getris contributors",
+  "author": "Getris and contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -53,9 +66,9 @@
   },
   "homepage": "https://github.com/Getris/ugc-guard#readme",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "devDependencies": {
-    "typescript": "~5.9.3"
+    "typescript": "5.9.3"
   }
 }

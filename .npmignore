@@ -1,7 +1,9 @@
 src/
 tests/
 examples/
+docs/
 .github/
+GITHUB_SETUP.md
+SECURITY_REVIEW.md
 tsconfig.json
-CONTRIBUTING.md
-CODE_OF_CONDUCT.md
+APPLY_UPDATE.ps1

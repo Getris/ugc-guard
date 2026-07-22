@@ -1,30 +1,22 @@
 import {
-  createGuard,
-  DuplicateRule,
-  HtmlRule,
-  LengthRule,
-  LinkRule,
-  PhraseRule,
-  SpamRule,
-  UnicodeRule
+  createCommunityGuard,
+  type GuardResult
 } from "@getris/ugc-guard";
 
-const guard = createGuard({
-  maxRiskScore: 60,
-  rules: [
-    new LengthRule({ maxLength: 500 }),
-    new HtmlRule(),
-    new LinkRule({ blockedHosts: ["example-malware.test"] }),
-    new PhraseRule({ phrases: ["configured blocked phrase"] }),
-    new SpamRule(),
-    new DuplicateRule(),
-    new UnicodeRule()
-  ]
+const guard = createCommunityGuard({
+  maxLength: 1_000,
+  blockedHosts: ["known-abuse.example"],
+  enableDuplicateDetection: true
 });
 
-const result = await guard.inspect({
-  text: "Hello from Zooplio!",
-  userId: "demo-user"
+const result: GuardResult = await guard.inspect({
+  text: "  Hello from the community!  ",
+  userId: "example-user"
 });
 
-console.log(result);
+console.log({
+  decision: result.decision,
+  score: result.score,
+  normalizedText: result.normalizedText,
+  findingCodes: result.findings.map((finding) => finding.code)
+});
