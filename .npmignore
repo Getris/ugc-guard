@@ -1,0 +1,7 @@
+src/
+tests/
+examples/
+.github/
+tsconfig.json
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
