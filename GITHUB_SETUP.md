@@ -1,36 +1,33 @@
-# Publish the repository on GitHub
+# GitHub setup for Getris/ugc-guard
 
-## Recommended method
+## Replace the existing local project
 
-1. Sign in to GitHub and create a new **public** repository named `ugc-guard`.
-2. Do not initialize it with a README, license, or `.gitignore`; those files already exist here.
-3. Extract this archive and open a terminal in the extracted folder.
-4. Run:
+Copy the contents of this folder over the existing repository working tree without deleting its hidden `.git` directory.
 
-```bash
-git init
+From the repository directory:
+
+```powershell
+git switch trigger-ci
 git add .
-git commit -m "Initial open-source release"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/ugc-guard.git
-git push -u origin main
+git commit -m "Release UGC Guard 0.2.0 security hardening"
+git push
 ```
 
-5. Replace `zooplio` in `package.json`, README badges, and GitHub links with your actual GitHub username or organization name.
-6. In GitHub repository settings, enable **Private vulnerability reporting** under Security.
-7. Add repository topics: `typescript`, `security`, `ugc`, `moderation`, `spam`, `open-source`.
+The existing pull request from `trigger-ci` to `main` will update automatically.
 
-## Before publishing to npm
+## Repository settings
 
-Choose an available package name. The scoped package `@getris/ugc-guard` requires access to the `zooplio` npm organization. Otherwise, use a name such as `zooplio-ugc-guard` and update the imports in the README.
+Recommended ruleset for `main`:
 
-Then run:
+- require pull requests;
+- block deletions and force pushes;
+- require CI and CodeQL after they have completed successfully at least once;
+- keep required approvals at `0` while the project has one maintainer;
+- require conversation resolution;
+- allow squash merge.
 
-```bash
-npm install
-npm test
-npm login
-npm publish --access public
-```
+## npm publication
 
-Never commit `.env` files, API keys, production URLs, private Zooplio source code, database schemas, user data, or infrastructure configuration.
+The package metadata uses `@getris/ugc-guard`. Confirm that the npm account owns the `@getris` scope before publishing. If it does not, change the package name and all installation/import examples before the first npm release.
+
+Do not publish until CI is green and `npm pack --dry-run` shows only the intended package files.

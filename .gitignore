@@ -1,9 +1,8 @@
 node_modules/
 dist/
 coverage/
+*.tgz
+.DS_Store
 .env
 .env.*
-*.log
-.DS_Store
-.idea/
-.vscode/
+!.env.example
